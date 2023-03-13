@@ -3,6 +3,8 @@ name: Server Build & Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "*.md"
 
 jobs:
   deploy:
@@ -58,7 +60,6 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
             cd /home/${{ secrets.DEPLOY_SSH_USERNAME }}/main
-            export COMPOSE_PROFILES=all
             docker compose down && docker compose up -d --build
       - name: Collect docker logs on failure
         if: failure()
