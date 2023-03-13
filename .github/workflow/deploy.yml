@@ -1,0 +1,54 @@
+name: Server Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      # This action use the github official cache mechanism internally
+      - name: Install sops
+        uses: mdgreenwald/mozilla-sops-action@v1.4.1
+        with:
+          version: 3.7.3
+      - name: 'Install age'
+      - uses: alessiodionisi/setup-age-action@v1.2.1
+        with:
+          version: 1.1.1
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          known_hosts: unnecessary
+  deploy:
+    needs: install
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v3
+        with:
+          path: main
+      - name: Decrypt env files
+        run: |
+          cd main && sops --decrypt --input-type dotenv --output-type dotenv .enc.env > .env
+          cd webapp && sops --decrypt --input-type dotenv --output-type dotenv .enc.env > .env
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_PRIVATE_KEY }}
+      - name: Adding Known Hosts
+        run: ssh-keyscan -p ${{ secrets.DEPLOY_SSH_PORT}} -H ${{ secrets.DEPLOY_SSH_HOST }}  >> ~/.ssh/known_hosts
+      - name: Copy using rsync
+        run: rsync -avz -e "ssh -p ${{ secrets.DEPLOY_SSH_PORT }}" ./main/ ${{ secrets.DEPLOY_SSH_USERNAME }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/${{ secrets.DEPLOY_SSH_USERNAME }}/main/
+      - name: Run build with SSH action
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT }}
+          script: |
+            cd /home/${{ secrets.DEPLOY_SSH_USERNAME }}/main
+            docker compose down && docker compose up -d --build
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2

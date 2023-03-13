@@ -1,0 +1,102 @@
+version: "3"
+services:
+  dbadmin:
+    image: adminer
+    container_name: dbadmin
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    ports:
+      - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${DBADMIN_PORT:-8080}:8080"
+    depends_on:
+      - postgres
+    networks:
+      - baas
+    env_file:
+      - ${PWD}/.env
+
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: datastore
+    ports:
+      - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${DB_PORT:-5432}:${DB_PORT:-5432}"
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    networks:
+      - baas
+    volumes:
+      - ./db_backup:/var/lib/postgresql/backup
+      # only .sh, .sql, .sql.gz files will be loaded in initdb.d
+      - ./db_init:/docker-entrypoint-initdb.d
+      - ./data/database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    env_file:
+      - ${PWD}/.env
+
+  api-cache:
+    container_name: api-cache
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    image: redis:7
+    networks:
+      - baas
+    env_file:
+      - ${PWD}/.env
+
+  directus:
+    container_name: directus
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    image: directus/directus:${DIRECTUS_VERSION:-latest}
+    ports:
+      - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${DIRECTUS_PORT:-8055}:${DIRECTUS_PORT:-8055}"
+    volumes:
+      # By default, uploads are stored in /directus/uploads
+      # Always make sure your volumes matches the storage root when using
+      # local driver
+      - ./data/directus/uploads:/directus/uploads
+      # Make sure to also mount the volume when using SQLite
+      # - ./database:/directus/database
+      # If you want to load extensions from the host
+      - ./data/directus/extensions:/directus/extensions
+    networks:
+      - baas
+    depends_on:
+      - api-cache
+      - postgres
+    env_file:
+      - ${PWD}/.env
+    environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+
+      DB_CLIENT: "pg"
+      DB_HOST: "postgres"
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${WEBAPP_DB_DATABASE}
+      DB_USER: ${WEBAPP_DB_USER}
+      DB_PASSWORD: ${WEBAPP_DB_PASSWORD}
+
+      CACHE_ENABLED: "true"
+      CACHE_AUTO_PURGE: "true"
+      CACHE_STORE: "redis"
+      CACHE_REDIS: "redis://api-cache:${REDIS_PORT:-6379}"
+      CACHE_STATUS_HEADER: "x-directus-cache-status"
+
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+
+      # CORS
+      # dev only
+      #CORS_ENABLED: "true"
+      #CORS_ORIGIN: "true"
+      #CORS_CREDENTIALS: "true"
+
+      # LOGGING
+      LOG_LEVEL: "${DIRECTUS_LOG_LEVEL:-info}"
+      LOG_STYLE: "${DIRECTUS_LOG_STYLE:-pretty}"
+
+      # we do not use this API for public facing
+      # (see https://docs.directus.io/configuration/config-options/#general)
+      # PUBLIC_URL: "https://directus.example.com"
+
+networks:
+  baas:

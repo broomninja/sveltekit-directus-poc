@@ -1,0 +1,79 @@
+version: "3"
+services:
+  # import the backend API and db
+  # in the future they can run on a separate host
+  dbadmin:
+    extends:
+      file: backend/docker-compose.yml
+      service: dbadmin
+    profiles:
+      - all
+      - local
+
+  postgres:
+    extends:
+      file: backend/docker-compose.yml
+      service: postgres
+    profiles:
+      - all
+      - local
+
+  api-cache:
+    extends:
+      file: backend/docker-compose.yml
+      service: api-cache
+    profiles:
+      - all
+      - local
+
+  directus:
+    extends:
+      file: backend/docker-compose.yml
+      service: directus
+    profiles:
+      - all
+      - local
+
+  # Run sveltekit
+  webapp:
+    container_name: webapp
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    environment:
+      - NODE_ENV=${WEBAPP_NODE_ENV:-development}
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile.webapp
+    ports:
+      - "${WEBAPP_PORT:-3000}:${WEBAPP_PORT:-3000}"
+    depends_on:
+      - directus
+    networks:
+      - baas
+    profiles:
+      - all
+
+  # Run the caddy server
+  caddy:
+    image: caddy/caddy:2-alpine
+    container_name: caddy
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+    networks:
+      - baas
+    profiles:
+      - all
+    env_file:
+      - ${PWD}/.env
+
+#volumes:
+#  caddy_data:
+#  caddy_config:
+
+networks:
+  baas:

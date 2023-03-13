@@ -1,0 +1,29 @@
+{$CADDY_SUBDOMAIN_WEBAPP}.{$CADDY_DOMAIN} {
+
+	respond /caddytest "Caddy is up"
+
+    encode gzip zstd
+    log {
+        output file /var/log/caddy/{$CADDY_DOMAIN}-access.log {
+            roll_size 10mb
+            roll_keep 20
+            roll_keep_for 720h
+        }
+    }
+
+    reverse_proxy webapp:{$WEBAPP_PORT} {
+        header_down Strict-Transport-Security max-age=31536000;
+    }
+}
+
+{$CADDY_SUBDOMAIN_DBADMIN}.{$CADDY_DOMAIN} {
+    reverse_proxy dbadmin:8080
+}
+
+{$CADDY_SUBDOMAIN_DIRECTUS}.{$CADDY_DOMAIN} {
+    reverse_proxy directus:{$DIRECTUS_PORT}
+}
+
+{$CADDY_DOMAIN}, www.{$CADDY_DOMAIN}  {
+	redir https://{$CADDY_SUBDOMAIN_WEBAPP}.{$CADDY_DOMAIN}{uri}
+}
