@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  install:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       # This action use the github official cache mechanism internally
@@ -13,18 +13,28 @@ jobs:
         uses: mdgreenwald/mozilla-sops-action@v1.4.1
         with:
           version: 3.7.3
-      - name: 'Install age'
-      - uses: alessiodionisi/setup-age-action@v1.2.1
-        with:
-          version: 1.1.1
+      - name: Install age
+        run: |
+          curl -Lo age.tar.gz https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz
+          tar xf age.tar.gz 
+          chmod 755 age/age*
+          sudo mv age/age /usr/local/bin
+          sudo mv age/age-keygen /usr/local/bin
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           known_hosts: unnecessary
-  deploy:
-    needs: install
-    steps:
+      - name: Install rsync
+        run: |
+          if [ -z "$(which rsync)" ]; then
+            apt-get update -qq && apt-get install -y -qq rsync
+          fi
+      - name: Check versions
+        run: |
+          echo sops && sops --version
+          echo age && age --version
+          echo rsync && rsync --version
       - name: Checkout files
         uses: actions/checkout@v3
         with:
@@ -48,7 +58,12 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
             cd /home/${{ secrets.DEPLOY_SSH_USERNAME }}/main
+            export COMPOSE_PROFILES=all
             docker compose down && docker compose up -d --build
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2
+        with:
+          images: "datastore,caddy,webapp"
+          # Only show last 100 lines of each
+          #tail: '100'
