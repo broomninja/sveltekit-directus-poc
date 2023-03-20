@@ -8,13 +8,14 @@ COPY . .
 RUN npm run build
 RUN npm prune --production
 
+ARG WEBAPP_PORT=3000
 FROM node:lts-slim as run
 WORKDIR /app
 RUN rm -rf ./*
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/build build/
 COPY --from=builder /app/node_modules node_modules/
-EXPOSE ${WEBAPP_PORT:-3000}
+EXPOSE ${WEBAPP_PORT}
 # See if increase libuv thread pool size makes performance better
 # The default value 4
 # http://docs.libuv.org/en/v1.x/threadpool.html

@@ -26,6 +26,14 @@ services:
       - all
       - local
 
+  search:
+    extends:
+      file: backend/docker-compose.yml
+      service: search
+    profiles:
+      - all
+      - local
+
   directus:
     extends:
       file: backend/docker-compose.yml
@@ -43,6 +51,8 @@ services:
     build:
       context: ./webapp
       dockerfile: Dockerfile.webapp
+      args:
+        - WEBAPP_PORT=${WEBAPP_PORT:-3000}
     ports:
       - "${WEBAPP_PORT:-3000}:${WEBAPP_PORT:-3000}"
     depends_on:

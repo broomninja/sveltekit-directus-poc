@@ -34,9 +34,9 @@
             offset: 10,
         }}  
     >
-        <a class="min-w-[14rem] group flex flex-col bg-white border shadow-sm rounded-xl hover:shadow-md dark:bg-slate-900 dark:border-gray-800" 
+        <a class="w-[14rem] group flex flex-col bg-white border shadow-sm rounded-xl hover:shadow-md dark:bg-slate-900 dark:border-gray-800" 
             href="/company/{companySlug}/feedback/{feedback.id}">
-            <div class="p-4 md:p-4 min-w-[14rem]">
+            <div class="p-4 md:p-4 w-[14rem]">
                 <div class="flex justify-between items-stretch bg-white">
                     <div class="bg-white">
                         <div class="h-[3rem] w-[9rem] group-hover:text-blue-600 line-clamp-2 font-semibold text-gray-800 dark:group-hover:text-gray-400 dark:text-gray-200">
@@ -71,7 +71,7 @@
 
     :global(.tooltip-feedback) {
         position: absolute;
-        z-index: 9999;
+        z-index: 100;
         width: 250px;
         height: 130px;
         background-color: rgb(243 244 246);
