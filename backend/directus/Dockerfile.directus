@@ -1,0 +1,52 @@
+# default version is latest
+ARG DIRECTUS_VERSION=latest
+FROM directus/directus:${DIRECTUS_VERSION}
+
+WORKDIR /directus
+
+# we are mounting the extensions folder in docker compose so 
+# we do not need to copy the extensions to the image
+#COPY ./extensions ./extensions
+
+# For future refenence when we need to do schema migrations/upgrades
+#COPY ./snapshots ./snapshots
+
+# extenions can point to git repos
+USER root
+RUN apk upgrade --no-cache \
+  && apk --no-cache add \
+  git \
+  curl \
+  jq
+
+USER node
+
+COPY ./searchsync.config.js ./
+COPY ./scripts ./scripts/
+
+# Install extensions
+# cannot specify extensions in custom package.json from git source, as npm install will 
+# remove existing packages
+RUN npm install --save "github:Fliegerweb/directus-extension-searchsync#581cb22"
+
+CMD sh scripts/meilisearch_setup_keys.sh && \
+    npx directus bootstrap && \
+    npx directus start
+
+# npx directus extension:searchsync index
+
+# CMD \
+#   npx directus bootstrap && \
+#   npx directus schema apply --yes ./snapshots/start.yaml && \
+#   npx directus start
+
+# CMD npx directus database install \
+#   && npx directus database migrate:latest \
+#   && role=$(LOG_LEVEL=silent npx directus roles create --role Administrator --admin true) \
+#   && password=${ADMIN_PASSWORD_FILE:+$(cat "$ADMIN_PASSWORD_FILE")} \
+#   && password=${password:-$ADMIN_PASSWORD} \
+#   && npx directus users create --email "$ADMIN_EMAIL" --password "$password" --role "$role" > /dev/null \
+#   && echo "$(date +%T) ✨ Admin user created successfully" \
+#   || npx directus database migrate:latest \
+#   && npx directus schema apply -y snapshot.yaml \
+#   && npx directus start

@@ -16,7 +16,7 @@ set -o pipefail
 # adding "_ACCOUNT" to the list will encrypt all keys ending with _ACCOUNT 
 # like SAMPLE_ACCOUNT and TEST_ACCOUNT
 #
-keys_to_encrypt="_EMAIL|_PASSWORD|_USER|_KEY|_SECRET|_API_TOKEN"
+keys_to_encrypt="_EMAIL|_PASSWORD|_USER|_KEY|_SECRET|_API_TOKEN|_API_UID"
 
 check_envar() {
     local public_key="${1}"

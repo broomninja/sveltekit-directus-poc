@@ -1,5 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { logger } from '$lib/utils/logger';
+import { building } from '$app/environment';
 
 export const logRequest = (async ({ event, resolve }) => {
     
@@ -12,11 +13,23 @@ export const logRequest = (async ({ event, resolve }) => {
     }
     const response = await resolve(event);
 
+    let clientIP = 'Unknown';
+    try {
+        if (!building) {
+            clientIP = event.getClientAddress();
+        }
+    }
+    catch (e: any) {
+        // error could be thrown when request is coming from kit server itself
+        logger.warn(`Problem getting client IP: ${e.message}`);
+    }
+
     if (doLogRequest) {
         logger.info({
             startTime: new Date(startTime).toISOString(),
             event: 'response',
             method: event.request.method,
+            IP: clientIP,
             url: event.url,
             duration: `${Date.now() - startTime}ms`,
             status: response.status,

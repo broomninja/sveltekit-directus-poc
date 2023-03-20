@@ -10,8 +10,7 @@
 import { logger } from '$lib/utils/logger';
 import { Directus } from '@directus/sdk';
 import type { ID } from '@directus/sdk';
-import { DIRECTUS_API_TOKEN, DIRECTUS_FRONTEND_USER_ROLE } from '$env/static/private';
-import { DIRECTUS_API_URL } from '$env/static/private';
+import { DIRECTUS_API_URL, DIRECTUS_API_TOKEN, DIRECTUS_FRONTEND_USER_ROLE } from '$env/static/private';
 import type { TransportResponse } from '@directus/sdk';
 
 const STORAGE_PREFIX = 'webapp_;';
@@ -156,7 +155,7 @@ export async function getTopCompanies<T = any, R = any>(
                         {
                             // companies with one or more feedbacks
                             ddb_feedback: {
-                                status: 'public',
+                                status: { _eq: 'public' },
                             },
                         },
                     ],
@@ -231,7 +230,7 @@ export async function getCompanyBySlug<T = any, R = any>(
                         {
                             // companies with one or more feedbacks
                             ddb_feedback: {
-                                status: 'public',
+                                status: { _eq: 'public' },
                             },
                         },
                     ],
@@ -289,6 +288,9 @@ export async function getFeedbackById<T = any, R = any>(id: ID): Promise<Transpo
                 ],
                 filter: {
                     id,
+                    status: { 
+                        _eq: 'public' 
+                    },
                 },
             },
         });

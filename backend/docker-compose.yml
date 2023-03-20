@@ -14,54 +14,76 @@ services:
       - ${PWD}/.env
 
   postgres:
-    image: postgis/postgis:15-3.3
+    image: postgis/postgis:${PG_VERSION:-15.3.3}
     container_name: datastore
     ports:
-      - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${DB_PORT:-5432}:${DB_PORT:-5432}"
+      - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${PG_DB_PORT:-5432}:${PG_DB_PORT:-5432}"
     restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
     networks:
       - baas
     volumes:
-      - ./db_backup:/var/lib/postgresql/backup
       # only .sh, .sql, .sql.gz files will be loaded in initdb.d
-      - ./db_init:/docker-entrypoint-initdb.d
-      - ./data/database:/var/lib/postgresql/data
+      - ./datastore/init:/docker-entrypoint-initdb.d
+      - ./datastore/backup:/var/lib/postgresql/backup
+      # pg_data folder has to be completely empty (ie no .gitkeep) for the initdb.d scripts to run
+      - ./datastore/pg_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${PG_DB_USER}
+      POSTGRES_PASSWORD: ${PG_DB_PASSWORD}
+      POSTGRES_DB: ${PG_DB_DATABASE}
     env_file:
       - ${PWD}/.env
 
   api-cache:
+    image: redis:${REDIS_VERSION:-7}
     container_name: api-cache
     restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
-    image: redis:7
     networks:
       - baas
-    env_file:
-      - ${PWD}/.env
+
+  search:
+    image: getmeili/meilisearch:${MEILI_VERSION:-v1.0.2}
+    container_name: search
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    volumes:
+      # By default indexes and documents are deleted every time the container stops.
+      # Use dedicated volume to keep data between reboots:
+      - ./meilisearch/meili_data:/meili_data
+    ports:
+      - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${MEILI_PORT:-7700}:7700"
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_NO_ANALYTICS=${MEILI_NO_ANALYTICS:-true}
+      - MEILI_ENV=${MEILI_ENV:-production}
+      - MEILI_LOG_LEVEL=${MEILI_LOG_LEVEL:-INFO}
+      - MEILI_MAX_INDEXING_MEMORY=${MEILI_MAX_INDEXING_MEMORY:-500Mb}
+    networks:
+      - baas
 
   directus:
     container_name: directus
     restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
-    image: directus/directus:${DIRECTUS_VERSION:-latest}
+    #image: directus/directus:${DIRECTUS_VERSION:-latest}
+    build:
+      context: ./directus
+      dockerfile: Dockerfile.directus
+      args:
+        - DIRECTUS_VERSION=${DIRECTUS_VERSION:-latest}
     ports:
       - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${DIRECTUS_PORT:-8055}:${DIRECTUS_PORT:-8055}"
     volumes:
       # By default, uploads are stored in /directus/uploads
       # Always make sure your volumes matches the storage root when using
       # local driver
-      - ./data/directus/uploads:/directus/uploads
-      # Make sure to also mount the volume when using SQLite
-      # - ./database:/directus/database
+      - ./directus/uploads:/directus/uploads
       # If you want to load extensions from the host
-      - ./data/directus/extensions:/directus/extensions
+      - ./directus/extensions:/directus/extensions
     networks:
       - baas
     depends_on:
       - api-cache
       - postgres
+      - search
     env_file:
       - ${PWD}/.env
     environment:
@@ -70,10 +92,10 @@ services:
 
       DB_CLIENT: "pg"
       DB_HOST: "postgres"
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${WEBAPP_DB_DATABASE}
-      DB_USER: ${WEBAPP_DB_USER}
-      DB_PASSWORD: ${WEBAPP_DB_PASSWORD}
+      DB_PORT: ${PG_DB_PORT:-5432}
+      DB_DATABASE: ${DIRECTUS_DB_DATABASE}
+      DB_USER: ${DIRECTUS_DB_USER}
+      DB_PASSWORD: ${DIRECTUS_DB_PASSWORD}
 
       CACHE_ENABLED: "true"
       CACHE_AUTO_PURGE: "true"

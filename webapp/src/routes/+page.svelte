@@ -58,7 +58,7 @@
 
     <!-- Content -->
     <div class="w-full px-4 sm:px-6 md:px-8">
-      <div class="max-w-3xl mx-auto xl:max-w-none py-0 xl:ml-28 xl:mr-28">
+      <div class="max-w-3xl mx-auto lg:max-w-5xl xl:max-w-none py-0 lg:mx-15 xl:mx-20">
 
         <!-- Content -->
         <div class="mt-12">
@@ -71,7 +71,7 @@
                 <!-- Card Section -->
                 <div class="max-w-[135rem] px-4 pt-8 sm:px-6 lg:px-6 lg:pt-8 mx-auto">
                     <!-- Grid -->
-                    <div class="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                         <!-- Card -->
                         {#each company?.feedback as feedback}
                         <CardFeedbackSmall companySlug={company.slug} {feedback} />

@@ -1,0 +1,3 @@
+datastore/pg_data/
+meilisearch/meili_data/**
+!.gitkeep
