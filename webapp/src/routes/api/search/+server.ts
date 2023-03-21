@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ url, request }) => {
     const data = await request.json();
     let query = data['query'] ?? '';
 
-    query = DOMPurify.sanitize(query.trim());
+    query = DOMPurify.sanitize(query);
 
     if (!query || query.trim().length === 0) {
         // do not throw error, simply return empty results
@@ -40,11 +40,7 @@ export const POST: RequestHandler = async ({ url, request }) => {
         });
     }
 
-    // logger.debug(`[/api/search] search query: "${query}"`);
-
-    const searchResult = await indexFeedback.search(query);
-
-    // logger.debug(`[/api/search] search result: ${JSON.stringify(searchResult, null, 2)}`);
+    const searchResult = await indexFeedback.search(query.trim());
 
     return json({
         result: searchResult,
