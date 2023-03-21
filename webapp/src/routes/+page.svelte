@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { PageData } from './$types';
+    import Ticker from '$lib/components/Ticker.svelte';
     import DisplayName from '$lib/components/DisplayName.svelte';
     import DisplayTime from '$lib/components/DisplayTime.svelte';
     import CardFeedbackSmall from '$lib/components/CardFeedbackSmall.svelte';
@@ -29,27 +30,35 @@
       </div>
     </div>
 
+    <!-- Ticker or dropdown depending on size -->
     <div id="secondary-nav-toggle" class="hs-collapse hidden overflow-hidden transition-all duration-300 absolute top-16 left-0 w-4/5 
-      rounded-md bg-white sm:block sm:static sm:top-0 sm:w-4/5 sm:max-h-full sm:bg-transparent sm:overflow-visible">
-      <div class="flex flex-col py-2 sm:flex-row sm:justify-start sm:gap-y-0 sm:gap-x-6 sm:py-0">
-        {#each data.companies as company}
-        <a href="#{company.slug}" class="group flex min-w-[9rem] items-center rounded-lg px-1 py-2 text-gray-700 bg-gray-100 hover:bg-gray-300 hover:text-gray-700">
-          <div class="flex gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
-            </svg>
-            <span class="text-sm font-medium">
-              {company?.name}
-            </span>
-          </div>
-          <div class="flex ml-auto pl-1">
-            <span class="shrink-0 rounded-full bg-white py-0.5 px-3 text-xs text-gray-600 group-hover:bg-white group-hover:text-gray-700"> 
-              {company?.feedback_count} 
-            </span>
-          </div>
-        </a>
-        {/each}
-      </div>
+        rounded-md bg-white sm:block sm:static sm:top-0 sm:w-4/5 sm:max-h-full sm:bg-transparent sm:overflow-visible z-[100]">
+        <div class="overflow-hidden">
+            <Ticker behavior={'always'} pausing={true} duration={15}>
+                <div>
+                    <div class="flex flex-col py-2 sm:flex-row sm:justify-start sm:gap-y-0 sm:gap-x-6 sm:py-0">
+                        {#each data.companies as company}
+                        <a href="#{company.slug}" class="group flex min-w-[9rem] items-center rounded-lg px-1 py-2 text-gray-700 bg-gray-100 hover:bg-gray-300 hover:text-gray-700">
+                        <div class="flex gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                            </svg>
+                            <span class="text-sm font-medium">
+                            {company?.name}
+                            </span>
+                        </div>
+                        <div class="flex ml-auto pl-1">
+                            <span class="shrink-0 rounded-full bg-white py-0.5 px-3 text-xs text-gray-600 group-hover:bg-white group-hover:text-gray-700"> 
+                            {company?.feedback_count} 
+                            </span>
+                        </div>
+                        </a>
+                        {/each}
+                        <div class="w-32"></div>
+                    </div>
+                </div>
+            </Ticker>
+        </div>
     </div>
 
   </div>
