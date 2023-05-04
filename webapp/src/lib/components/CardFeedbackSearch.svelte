@@ -20,7 +20,7 @@
                     <div class="mb-1 line-clamp-2 text-sm">
                         {@html feedback.content}
                     </div>
-                    <div class="md:mt-2 text-sm text-gray-500 text-xs">
+                    <div class="md:mt-2 text-sm text-gray-500 text-xs whitespace-nowrap">
                         <DisplayTime prefix={'created'} datetime={feedback.date_created} /> 
                         
                         by {feedback['author_id.first_name']} {feedback['author_id.last_name'][0]}

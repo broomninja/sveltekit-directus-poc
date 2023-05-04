@@ -17,7 +17,7 @@
         <div class="ml-1 pr-1 flex justify-center min-w-[1.8rem] row-span-2">
             <PersonIcon width=22 />
         </div>
-        <div class="ml-1 text-md text-gray-800 dark:text-gray-400">
+        <div class="ml-1 text-md text-gray-800 dark:text-gray-400 whitespace-nowrap">
             {name}
         </div>
     </div>
