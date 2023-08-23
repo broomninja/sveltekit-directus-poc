@@ -65,6 +65,6 @@ jobs:
         if: failure()
         uses: jwalton/gh-docker-logs@v2
         with:
-          images: "datastore,caddy,webapp"
+          images: "datastore,webapp"
           # Only show last 100 lines of each
           #tail: '100'

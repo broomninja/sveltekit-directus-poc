@@ -27,7 +27,7 @@ COPY ./scripts ./scripts/
 # Install extensions
 # cannot specify extensions in custom package.json from git source, as npm install will 
 # remove existing packages
-RUN npm install --save "github:Fliegerweb/directus-extension-searchsync#581cb22"
+RUN pnpm install --save "github:Fliegerweb/directus-extension-searchsync#581cb22cb8cda6751de34a7231d9fa09a0eb89d7"
 
 CMD sh scripts/meilisearch_setup_keys.sh && \
     npx directus bootstrap && \

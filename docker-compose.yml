@@ -58,32 +58,11 @@ services:
     depends_on:
       - directus
     networks:
-      - baas
+      - caddy_network
     profiles:
       - all
-
-  # Run the caddy server
-  caddy:
-    image: caddy/caddy:2-alpine
-    container_name: caddy
-    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/data:/data
-      - ./caddy/config:/config
-    networks:
-      - baas
-    profiles:
-      - all
-    env_file:
-      - ${PWD}/.env
-
-#volumes:
-#  caddy_data:
-#  caddy_config:
 
 networks:
-  baas:
+  caddy_network:
+    name: caddy_baas
+    external: true

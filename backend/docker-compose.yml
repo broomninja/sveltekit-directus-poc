@@ -9,7 +9,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - baas
+      - caddy_network
     env_file:
       - ${PWD}/.env
 
@@ -20,7 +20,7 @@ services:
       - "${DOCKER_LOCAL_LISTEN_ADDR:-127.0.0.1}:${PG_DB_PORT:-5432}:${PG_DB_PORT:-5432}"
     restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
     networks:
-      - baas
+      - caddy_network
     volumes:
       # only .sh, .sql, .sql.gz files will be loaded in initdb.d
       - ./datastore/init:/docker-entrypoint-initdb.d
@@ -39,7 +39,7 @@ services:
     container_name: api-cache
     restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
     networks:
-      - baas
+      - caddy_network
 
   search:
     image: getmeili/meilisearch:${MEILI_VERSION:-v1.0.2}
@@ -58,7 +58,7 @@ services:
       - MEILI_LOG_LEVEL=${MEILI_LOG_LEVEL:-INFO}
       - MEILI_MAX_INDEXING_MEMORY=${MEILI_MAX_INDEXING_MEMORY:-500Mb}
     networks:
-      - baas
+      - caddy_network
 
   directus:
     container_name: directus
@@ -79,7 +79,7 @@ services:
       # If you want to load extensions from the host
       - ./directus/extensions:/directus/extensions
     networks:
-      - baas
+      - caddy_network
     depends_on:
       - api-cache
       - postgres
@@ -121,4 +121,6 @@ services:
       # PUBLIC_URL: "https://directus.example.com"
 
 networks:
-  baas:
+  caddy_network:
+    name: caddy_baas
+    external: true
